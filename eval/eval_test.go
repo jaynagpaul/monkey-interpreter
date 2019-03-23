@@ -566,3 +566,32 @@ func TestQuote(t *testing.T) {
 		}
 	}
 }
+
+func TestQuoteUnquote(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{`quote(unquote(4))`, `4`},
+		{`quote(unquote(4 + 4))`, `8`},
+		{`quote(8 + unquote(4 + 4))`, `(8 + 8)`},
+		{`quote(unquote(4 + 4) + 8)`, `(8 + 8)`},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		q, ok := evaluated.(*object.Quote)
+		if !ok {
+			t.Fatalf("expected *object.Quote, but got %T (%#v)", evaluated, evaluated)
+		}
+
+		if q.Node == nil {
+			t.Fatalf("quote.Node is nil")
+		}
+
+		got := q.Node.String()
+		if got != tt.want {
+			t.Errorf("expected %q, but got %q", tt.want, got)
+		}
+	}
+}
